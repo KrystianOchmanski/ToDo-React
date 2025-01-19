@@ -1,4 +1,3 @@
-import { CreateTaskDTO } from "../Models/CreateTaskDTO";
 import { Task } from "../Models/Task";
 import { API_URL } from "../utils";
 
@@ -12,9 +11,19 @@ export const getTasks = async (): Promise<Task[]> => {
   return taskList;
 };
 
-export const addTask = async (task: CreateTaskDTO) => {
+export const addTask = async (task: Task) => {
   await fetch(taskApiUrl, {
     method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(task),
+  });
+};
+
+export const updateTask = async (task: Task) => {
+  await fetch(`${taskApiUrl}/${task.id}`, {
+    method: "PUT",
     headers: {
       "content-type": "application/json",
     },

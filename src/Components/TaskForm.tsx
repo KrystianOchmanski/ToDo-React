@@ -6,31 +6,36 @@ import {
   FormLabel,
   TextField,
 } from "@mui/material";
-import { ChangeEvent, FormEvent, useState } from "react";
-import { CreateTaskDTO } from "../Models/CreateTaskDTO";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { Task } from "../Models/Task";
 
-type CreateTaskProps = {
-  taskCreated: (task: CreateTaskDTO) => void;
+type TaskFormProps = {
+  task?: Task;
+  onSubmit: (task: Task) => void;
+  submitBtnText: string;
   close: () => void;
 };
 
-export const CreateTask = ({ taskCreated, close }: CreateTaskProps) => {
-  const [task, setTask] = useState({
-    title: "",
-    isImportant: false,
-    isCompleted: false,
-    endDate: undefined,
-  } as CreateTaskDTO);
+export const TaskForm = ({
+  task,
+  onSubmit,
+  submitBtnText,
+  close,
+}: TaskFormProps) => {
+  const [localTask, setTask] = useState<Task>(new Task(0, "", false, false));
+
+  useEffect(() => {
+    if (task) setTask(task);
+  }, [task]);
 
   function change(e: ChangeEvent<HTMLInputElement>): void {
     let { name, value, type, checked } = e.target as HTMLInputElement;
-    setTask({ ...task, [name]: type === "checkbox" ? checked : value });
-    console.log(task);
+    setTask({ ...localTask, [name]: type === "checkbox" ? checked : value });
   }
 
-  function submitHandler(e: FormEvent<HTMLFormElement>): void {
-    e.preventDefault();
-    taskCreated(task);
+  function submitHandler(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    onSubmit(localTask);
   }
 
   return (
@@ -40,7 +45,7 @@ export const CreateTask = ({ taskCreated, close }: CreateTaskProps) => {
         <TextField
           title="Title"
           name="title"
-          value={task.title}
+          value={localTask.title}
           onChange={change}
         ></TextField>
       </FormGroup>
@@ -49,7 +54,7 @@ export const CreateTask = ({ taskCreated, close }: CreateTaskProps) => {
         <TextField
           type="date"
           name="endDate"
-          value={task.endDate || ""}
+          value={localTask.endDate || ""}
           onChange={change}
         ></TextField>
       </FormGroup>
@@ -58,7 +63,7 @@ export const CreateTask = ({ taskCreated, close }: CreateTaskProps) => {
           control={
             <Checkbox
               name="isImportant"
-              checked={task.isImportant}
+              checked={localTask.isImportant}
               onChange={change}
             ></Checkbox>
           }
@@ -70,7 +75,7 @@ export const CreateTask = ({ taskCreated, close }: CreateTaskProps) => {
           control={
             <Checkbox
               name="isCompleted"
-              checked={task.isCompleted}
+              checked={localTask.isCompleted}
               onChange={change}
             ></Checkbox>
           }
@@ -83,7 +88,7 @@ export const CreateTask = ({ taskCreated, close }: CreateTaskProps) => {
         color="success"
         sx={{ marginRight: 2 }}
       >
-        Add
+        {submitBtnText}
       </Button>
       <Button variant="outlined" color="error" onClick={close}>
         Close

@@ -3,40 +3,33 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Collapse,
   List,
   ListItemButton,
   ListItemText,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Task } from "../Models/Task";
-import { CreateTask } from "./CreateTask";
-import { CreateTaskDTO } from "../Models/CreateTaskDTO";
-import { addTask, getTasks } from "../Services/TaskService";
+import { addTask } from "../Services/TaskService";
+import { TaskForm } from "./TaskForm";
+import { CheckCircle, Star } from "@mui/icons-material";
 
-export function TaskList() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+type TaskListProps = {
+  tasks: Task[];
+  selectTask: (task: Task) => void;
+  taskChanged: () => void;
+};
+
+export function TaskList({ tasks, selectTask, taskChanged }: TaskListProps) {
   const [isCreateFormShown, setCreateForm] = useState<boolean>(false);
 
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  async function loadTasks() {
-    let tasks = await getTasks();
-    setTasks(tasks);
+  function toggleCreateForm(): void {
+    setCreateForm((prev) => !prev);
   }
 
-  function showCreateForm(): void {
-    setCreateForm(true);
-  }
-
-  function createTaskClosed(): void {
-    setCreateForm(false);
-  }
-
-  async function handleAddTask(task: CreateTaskDTO): Promise<void> {
+  async function handleAddTask(task: Task): Promise<void> {
     await addTask(task);
-    loadTasks();
+    taskChanged();
   }
 
   return (
@@ -47,7 +40,7 @@ export function TaskList() {
           action={
             <Button
               variant="contained"
-              onClick={showCreateForm}
+              onClick={toggleCreateForm}
               disabled={isCreateFormShown}
             >
               Add task
@@ -55,20 +48,37 @@ export function TaskList() {
           }
         ></CardHeader>
         <CardContent>
-          {isCreateFormShown && (
-            <CreateTask
-              taskCreated={handleAddTask}
-              close={createTaskClosed}
-            ></CreateTask>
-          )}
+          <Collapse in={isCreateFormShown} timeout="auto" unmountOnExit>
+            <TaskForm
+              onSubmit={handleAddTask}
+              submitBtnText="Add"
+              close={toggleCreateForm}
+            />
+          </Collapse>
           <List>
             {tasks.map((task) => {
               return (
-                <ListItemButton key={task.id}>
+                <ListItemButton
+                  key={task.id}
+                  onClick={() => selectTask(task)}
+                  sx={{
+                    textDecoration: task.isCompleted ? "line-through" : "none",
+                  }}
+                >
                   <ListItemText
-                    primary={task.title}
+                    primary={
+                      <>
+                        {task.isImportant && (
+                          <Star color="warning" fontSize="small" />
+                        )}
+                        {task.title}
+                      </>
+                    }
                     secondary={task.endDate ? task.endDate.toString() : ""}
-                  ></ListItemText>
+                  />
+                  {task.isCompleted && (
+                    <CheckCircle color="success" fontSize="small" />
+                  )}
                 </ListItemButton>
               );
             })}
